@@ -17,7 +17,7 @@ import {
   Check,
 } from "lucide-react";
 import { DEMO_MODE, DEMO_PROFILE, DEMO_STREAK } from "@/lib/demo-data";
-import { LIMITATION_OPTIONS } from "@/lib/types";
+import { LIMITATION_OPTIONS, KETTLEBELL_WEIGHTS } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import type { Profile, Streak, Gender, Limitation } from "@/lib/types";
 
@@ -31,6 +31,7 @@ export default function ProfilePage() {
   const [gender, setGender] = useState<Gender | null>(null);
   const [limitations, setLimitations] = useState<Limitation[]>([]);
   const [pushupCount, setPushupCount] = useState<string>("");
+  const [kettlebellWeights, setKettlebellWeights] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -74,6 +75,7 @@ export default function ProfilePage() {
           ? String(profileRes.data.pushup_count)
           : ""
       );
+      setKettlebellWeights(profileRes.data?.kettlebell_weights || []);
       setStreak(streakRes.data);
       setTotalPoints(
         (pointsRes.data || []).reduce(
@@ -90,6 +92,14 @@ export default function ProfilePage() {
   function toggleLimitation(lim: Limitation) {
     setLimitations((prev) =>
       prev.includes(lim) ? prev.filter((l) => l !== lim) : [...prev, lim]
+    );
+  }
+
+  function toggleWeight(weight: number) {
+    setKettlebellWeights((prev) =>
+      prev.includes(weight)
+        ? prev.filter((w) => w !== weight)
+        : [...prev, weight].sort((a, b) => a - b)
     );
   }
 
@@ -111,6 +121,7 @@ export default function ProfilePage() {
         gender,
         limitations,
         pushup_count: pushupCount ? parseInt(pushupCount, 10) : null,
+        kettlebell_weights: kettlebellWeights,
       })
       .eq("id", user.id);
 
@@ -253,6 +264,37 @@ export default function ProfilePage() {
           value={pushupCount}
           onChange={(e) => setPushupCount(e.target.value)}
         />
+      </Card>
+
+      {/* Kettlebell Weights */}
+      <Card className="space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-300">
+            My Kettlebells
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Select the weights you have so the AI suggests the right one for each exercise
+          </p>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {KETTLEBELL_WEIGHTS.map((weight) => {
+            const isSelected = kettlebellWeights.includes(weight);
+            return (
+              <button
+                key={weight}
+                onClick={() => toggleWeight(weight)}
+                className={cn(
+                  "rounded-xl border px-2 py-2 text-xs font-bold transition-all",
+                  isSelected
+                    ? "border-orange-500 bg-orange-500/10 text-orange-400"
+                    : "border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600"
+                )}
+              >
+                {weight} lbs
+              </button>
+            );
+          })}
+        </div>
       </Card>
 
       {/* Save */}

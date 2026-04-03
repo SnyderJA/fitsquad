@@ -23,6 +23,7 @@ export const DEMO_PROFILE: Profile = {
   gender: null,
   limitations: [],
   pushup_count: null,
+  kettlebell_weights: [],
   created_at: "2025-01-01",
 };
 
@@ -93,6 +94,7 @@ export const DEMO_FRIENDS: {
       gender: null,
       limitations: [],
       pushup_count: null,
+      kettlebell_weights: [],
       created_at: "2025-01-01",
     },
     todayWorkout: {
@@ -121,6 +123,7 @@ export const DEMO_FRIENDS: {
       gender: null,
       limitations: [],
       pushup_count: null,
+      kettlebell_weights: [],
       created_at: "2025-01-01",
     },
     todayWorkout: null,
@@ -140,6 +143,7 @@ export const DEMO_FRIENDS: {
       gender: null,
       limitations: [],
       pushup_count: null,
+      kettlebell_weights: [],
       created_at: "2025-01-01",
     },
     todayWorkout: {

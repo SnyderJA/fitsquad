@@ -29,6 +29,7 @@ export interface Exercise {
   reps: string; // e.g. "12" or "30s" for timed
   restSeconds: number;
   description: string;
+  suggestedWeight?: string; // e.g. "20 lbs" for kettlebell exercises
 }
 
 export interface GeneratedWorkout {
@@ -53,6 +54,8 @@ export const LIMITATION_OPTIONS = [
 
 export type Limitation = (typeof LIMITATION_OPTIONS)[number]["value"];
 
+export const KETTLEBELL_WEIGHTS = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80, 90, 100] as const;
+
 export interface Profile {
   id: string;
   display_name: string;
@@ -60,6 +63,7 @@ export interface Profile {
   gender: Gender | null;
   limitations: Limitation[];
   pushup_count: number | null;
+  kettlebell_weights: number[];
   created_at: string;
 }
 

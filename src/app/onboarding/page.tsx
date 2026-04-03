@@ -6,12 +6,12 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { LIMITATION_OPTIONS } from "@/lib/types";
+import { LIMITATION_OPTIONS, KETTLEBELL_WEIGHTS } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Dumbbell, ArrowRight, ArrowLeft, Check } from "lucide-react";
 import type { Gender, Limitation } from "@/lib/types";
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 4;
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -19,6 +19,7 @@ export default function OnboardingPage() {
   const [gender, setGender] = useState<Gender | null>(null);
   const [limitations, setLimitations] = useState<Limitation[]>([]);
   const [pushupCount, setPushupCount] = useState("");
+  const [kettlebellWeights, setKettlebellWeights] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
 
   function toggleLimitation(lim: Limitation) {
@@ -27,10 +28,19 @@ export default function OnboardingPage() {
     );
   }
 
+  function toggleWeight(weight: number) {
+    setKettlebellWeights((prev) =>
+      prev.includes(weight)
+        ? prev.filter((w) => w !== weight)
+        : [...prev, weight].sort((a, b) => a - b)
+    );
+  }
+
   function canAdvance() {
     if (step === 1) return gender !== null;
     if (step === 2) return true; // limitations are optional
     if (step === 3) return pushupCount !== "";
+    if (step === 4) return kettlebellWeights.length > 0;
     return false;
   }
 
@@ -49,6 +59,7 @@ export default function OnboardingPage() {
         gender,
         limitations,
         pushup_count: pushupCount ? parseInt(pushupCount, 10) : null,
+        kettlebell_weights: kettlebellWeights,
       })
       .eq("id", user.id);
 
@@ -69,13 +80,14 @@ export default function OnboardingPage() {
             {step === 1 && "About You"}
             {step === 2 && "Any Limitations?"}
             {step === 3 && "Fitness Level"}
+            {step === 4 && "Your Kettlebells"}
           </h1>
           <p className="text-sm text-slate-400">
             {step === 1 && "This helps us personalize your workouts"}
-            {step === 2 &&
-              "We'll avoid exercises that stress these areas"}
-            {step === 3 &&
-              "This helps us calibrate workout difficulty"}
+            {step === 2 && "We'll avoid exercises that stress these areas"}
+            {step === 3 && "This helps us calibrate workout difficulty"}
+            {step === 4 &&
+              "Select the kettlebell weights you have available"}
           </p>
         </div>
 
@@ -194,6 +206,42 @@ export default function OnboardingPage() {
                       — We&apos;ll bring the heat
                     </>
                   )}
+                </p>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* Step 4: Kettlebell Weights */}
+        {step === 4 && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-2">
+              {KETTLEBELL_WEIGHTS.map((weight) => {
+                const isSelected = kettlebellWeights.includes(weight);
+                return (
+                  <button
+                    key={weight}
+                    onClick={() => toggleWeight(weight)}
+                    className={cn(
+                      "rounded-xl border px-3 py-3 text-sm font-bold transition-all",
+                      isSelected
+                        ? "border-orange-500 bg-orange-500/10 text-orange-400"
+                        : "border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600"
+                    )}
+                  >
+                    {weight} lbs
+                  </button>
+                );
+              })}
+            </div>
+            {kettlebellWeights.length > 0 && (
+              <Card className="bg-slate-800/30 border-slate-700/30">
+                <p className="text-xs text-slate-500">
+                  Selected:{" "}
+                  <span className="text-orange-400 font-medium">
+                    {kettlebellWeights.map((w) => `${w} lbs`).join(", ")}
+                  </span>
+                  {" "}— The AI will suggest which weight to use for each exercise
                 </p>
               </Card>
             )}

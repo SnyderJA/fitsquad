@@ -255,6 +255,11 @@ export default function WorkoutDetailPage() {
                           <span>{exercise.restSeconds}s rest</span>
                         )}
                       </div>
+                      {exercise.suggestedWeight && (
+                        <p className="mt-1 text-xs font-medium text-blue-400">
+                          {exercise.suggestedWeight}
+                        </p>
+                      )}
                     </div>
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${

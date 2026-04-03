@@ -84,9 +84,11 @@ export function generateWorkout(
     ? (["chest", "back", "shoulders", "arms", "legs", "glutes", "core"] as FocusArea[])
     : focusAreas;
 
-  // Filter exercises matching the focus areas
-  const matchingExercises = EXERCISE_LIBRARY.filter((ex) =>
-    ex.muscleGroups.some((mg) => areas.includes(mg))
+  // Filter kettlebell exercises matching the focus areas for main workout
+  const matchingExercises = EXERCISE_LIBRARY.filter(
+    (ex) =>
+      ex.type === "kettlebell" &&
+      ex.muscleGroups.some((mg) => areas.includes(mg))
   );
 
   // Shuffle and pick enough exercises to fill the duration
@@ -94,7 +96,9 @@ export function generateWorkout(
   const mainMinutes = durationMinutes - 10; // subtract warmup/cooldown
   const exerciseCount = Math.max(4, Math.min(8, Math.floor(mainMinutes / 3.5)));
 
-  const selected = shuffleArray(matchingExercises).slice(0, exerciseCount);
+  const selected = shuffleArray(matchingExercises)
+    .slice(0, exerciseCount)
+    .map((ex) => ({ ...ex, suggestedWeight: "25 lbs" }));
 
   return {
     focusAreas,

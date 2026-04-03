@@ -16,14 +16,21 @@ export async function POST(request: Request) {
     );
   }
 
-  const { focusAreas, durationMinutes, gender, limitations, pushupCount } =
-    (await request.json()) as {
-      focusAreas: FocusArea[];
-      durationMinutes: number;
-      gender?: string | null;
-      limitations?: string[];
-      pushupCount?: number | null;
-    };
+  const {
+    focusAreas,
+    durationMinutes,
+    gender,
+    limitations,
+    pushupCount,
+    kettlebellWeights,
+  } = (await request.json()) as {
+    focusAreas: FocusArea[];
+    durationMinutes: number;
+    gender?: string | null;
+    limitations?: string[];
+    pushupCount?: number | null;
+    kettlebellWeights?: number[];
+  };
 
   // Build personalization context
   const personalization: string[] = [];
@@ -41,17 +48,26 @@ export async function POST(request: Request) {
       `The user can do ${pushupCount} push-ups (${level} level). Adjust exercise difficulty, reps, and sets accordingly.`
     );
   }
+  if (kettlebellWeights && kettlebellWeights.length > 0) {
+    personalization.push(
+      `The user has these kettlebells available: ${kettlebellWeights.map((w) => `${w} lbs`).join(", ")}. For each kettlebell exercise, include a "suggestedWeight" field with the recommended weight from their available kettlebells (e.g. "25 lbs"). Choose appropriate weights based on the exercise and the user's fitness level.`
+    );
+  }
 
   const personalizationBlock =
     personalization.length > 0
       ? `\n\nUser profile:\n${personalization.join("\n")}\n`
       : "";
 
-  const prompt = `You are a fitness coach. Create a ${durationMinutes}-minute workout targeting: ${focusAreas.join(", ")}.${personalizationBlock}
-Only bodyweight and kettlebell exercises. Include warmup (3 exercises), main (6 exercises), cooldown (3 exercises).
+  const prompt = `You are a kettlebell fitness coach. Create a ${durationMinutes}-minute workout targeting: ${focusAreas.join(", ")}.${personalizationBlock}
+IMPORTANT RULES:
+- Warm-up: bodyweight only (no kettlebells), 3 exercises
+- Main workout: KETTLEBELL ONLY exercises, 6 exercises. Every main exercise must use a kettlebell.
+- Cool-down: bodyweight only (stretching/mobility), 3 exercises
+- For each kettlebell exercise, include a "suggestedWeight" field with the recommended weight in lbs
 
 Respond with ONLY this JSON, no other text:
-{"warmup":[{"name":"Exercise","type":"bodyweight","sets":1,"reps":"30s","restSeconds":0,"description":"Brief description"}],"exercises":[{"name":"Exercise","type":"kettlebell","sets":3,"reps":"12","restSeconds":60,"description":"Brief description"}],"cooldown":[{"name":"Exercise","type":"bodyweight","sets":1,"reps":"30s","restSeconds":0,"description":"Brief description"}]}`;
+{"warmup":[{"name":"Exercise","type":"bodyweight","sets":1,"reps":"30s","restSeconds":0,"description":"Brief description"}],"exercises":[{"name":"Exercise","type":"kettlebell","sets":3,"reps":"12","restSeconds":60,"description":"Brief description","suggestedWeight":"25 lbs"}],"cooldown":[{"name":"Exercise","type":"bodyweight","sets":1,"reps":"30s","restSeconds":0,"description":"Brief description"}]}`;
 
   try {
     const controller = new AbortController();

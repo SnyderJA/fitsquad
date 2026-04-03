@@ -36,7 +36,7 @@ export default function NewWorkoutPage() {
     if (user) {
       const { data } = await supabase
         .from("profiles")
-        .select("gender, limitations, pushup_count")
+        .select("gender, limitations, pushup_count, kettlebell_weights")
         .eq("id", user.id)
         .single();
       profileData = data;
@@ -53,6 +53,7 @@ export default function NewWorkoutPage() {
           gender: profileData?.gender || null,
           limitations: profileData?.limitations || [],
           pushupCount: profileData?.pushup_count || null,
+          kettlebellWeights: profileData?.kettlebell_weights || [],
         }),
       });
 
