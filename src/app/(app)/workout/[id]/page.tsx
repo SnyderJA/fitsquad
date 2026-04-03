@@ -12,6 +12,8 @@ import {
   Clock,
   ArrowLeft,
   Trophy,
+  Sparkles,
+  Cpu,
 } from "lucide-react";
 import type { Workout, Exercise } from "@/lib/types";
 
@@ -133,7 +135,10 @@ export default function WorkoutDetailPage() {
     );
   }
 
-  const exercises = workout.exercises as unknown as WorkoutExercise[];
+  const rawExercises = workout.exercises as unknown as (WorkoutExercise | { _meta: { source: string } })[];
+  const metaEntry = rawExercises.find((e) => "_meta" in e) as { _meta: { source: string } } | undefined;
+  const aiSource = metaEntry?._meta?.source || "local";
+  const exercises = rawExercises.filter((e) => !("_meta" in e)) as WorkoutExercise[];
   const allCompleted = completedExercises.size === exercises.length;
   const phases = ["warmup", "main", "cooldown"] as const;
   const phaseLabels = { warmup: "Warm-up", main: "Workout", cooldown: "Cool-down" };
@@ -161,6 +166,19 @@ export default function WorkoutDetailPage() {
               </span>
             ))}
           </div>
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium mb-1 ${
+              aiSource === "ai"
+                ? "bg-purple-500/10 text-purple-400"
+                : "bg-slate-700 text-slate-400"
+            }`}
+          >
+            {aiSource === "ai" ? (
+              <><Sparkles className="h-3 w-3" /> AI Generated</>
+            ) : (
+              <><Cpu className="h-3 w-3" /> Preset Workout</>
+            )}
+          </span>
           <div className="flex items-center gap-3 text-sm text-slate-400">
             <span className="flex items-center gap-1">
               <Dumbbell className="h-3.5 w-3.5" />

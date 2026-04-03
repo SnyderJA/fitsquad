@@ -66,6 +66,7 @@ export default function NewWorkoutPage() {
       return;
     }
 
+    const source = aiSource || "local";
     const { data, error: dbError } = await supabase
       .from("workouts")
       .insert({
@@ -73,7 +74,7 @@ export default function NewWorkoutPage() {
         date: new Date().toISOString().split("T")[0],
         focus_areas: focusAreas,
         duration_minutes: duration,
-        exercises,
+        exercises: [{ _meta: { source } }, ...exercises],
         completed: false,
       })
       .select()
