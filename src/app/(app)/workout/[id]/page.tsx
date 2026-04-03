@@ -142,7 +142,6 @@ export default function WorkoutDetailPage() {
   const exercises = rawExercises.filter(
     (e) => e && typeof e === "object" && !("_meta" in e)
   ) as unknown as WorkoutExercise[];
-  console.log("Workout meta:", { metaEntry, aiSource, totalRaw: rawExercises.length, filtered: exercises.length });
   const allCompleted = completedExercises.size === exercises.length;
   const phases = ["warmup", "main", "cooldown"] as const;
   const phaseLabels = { warmup: "Warm-up", main: "Workout", cooldown: "Cool-down" };
