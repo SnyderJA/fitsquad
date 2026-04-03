@@ -24,6 +24,7 @@ export default function NewWorkoutPage() {
     setAiSource("");
 
     let exercises;
+    let source: "ai" | "local" = "local";
 
     // Try AI generation first, fall back to local generator
     try {
@@ -40,7 +41,7 @@ export default function NewWorkoutPage() {
           ...aiWorkout.exercises,
           ...aiWorkout.cooldown,
         ];
-        setAiSource("ai");
+        source = "ai";
       } else {
         const errBody = await aiResponse.json().catch(() => ({}));
         console.error("AI API error:", aiResponse.status, errBody);
@@ -55,8 +56,10 @@ export default function NewWorkoutPage() {
         ...workout.exercises.map((e) => ({ ...e, phase: "main" })),
         ...workout.cooldown.map((e) => ({ ...e, phase: "cooldown" })),
       ];
-      setAiSource("local");
+      source = "local";
     }
+
+    setAiSource(source);
 
     const supabase = createClient();
     const {
@@ -69,7 +72,6 @@ export default function NewWorkoutPage() {
       return;
     }
 
-    const source = aiSource || "local";
     const { data, error: dbError } = await supabase
       .from("workouts")
       .insert({
