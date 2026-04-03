@@ -135,10 +135,14 @@ export default function WorkoutDetailPage() {
     );
   }
 
-  const rawExercises = workout.exercises as unknown as (WorkoutExercise | { _meta: { source: string } })[];
-  const metaEntry = rawExercises.find((e) => "_meta" in e) as { _meta: { source: string } } | undefined;
-  const aiSource = metaEntry?._meta?.source || "local";
-  const exercises = rawExercises.filter((e) => !("_meta" in e)) as WorkoutExercise[];
+  const rawExercises = workout.exercises as unknown as Record<string, unknown>[];
+  const metaEntry = rawExercises.find((e) => e && typeof e === "object" && "_meta" in e);
+  const meta = metaEntry as { _meta: { source: string } } | undefined;
+  const aiSource = meta?._meta?.source || "local";
+  const exercises = rawExercises.filter(
+    (e) => e && typeof e === "object" && !("_meta" in e)
+  ) as unknown as WorkoutExercise[];
+  console.log("Workout meta:", { metaEntry, aiSource, totalRaw: rawExercises.length, filtered: exercises.length });
   const allCompleted = completedExercises.size === exercises.length;
   const phases = ["warmup", "main", "cooldown"] as const;
   const phaseLabels = { warmup: "Warm-up", main: "Workout", cooldown: "Cool-down" };
