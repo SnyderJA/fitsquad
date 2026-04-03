@@ -20,6 +20,9 @@ export const DEMO_PROFILE: Profile = {
   id: "demo-user",
   display_name: "You",
   avatar_url: null,
+  gender: null,
+  limitations: [],
+  pushup_count: null,
   created_at: "2025-01-01",
 };
 
@@ -87,6 +90,9 @@ export const DEMO_FRIENDS: {
       id: "friend-1",
       display_name: "Marcus",
       avatar_url: null,
+      gender: null,
+      limitations: [],
+      pushup_count: null,
       created_at: "2025-01-01",
     },
     todayWorkout: {
@@ -112,6 +118,9 @@ export const DEMO_FRIENDS: {
       id: "friend-2",
       display_name: "Aisha",
       avatar_url: null,
+      gender: null,
+      limitations: [],
+      pushup_count: null,
       created_at: "2025-01-01",
     },
     todayWorkout: null,
@@ -128,6 +137,9 @@ export const DEMO_FRIENDS: {
       id: "friend-3",
       display_name: "Jordan",
       avatar_url: null,
+      gender: null,
+      limitations: [],
+      pushup_count: null,
       created_at: "2025-01-01",
     },
     todayWorkout: {

@@ -14,9 +14,12 @@ import {
   Dumbbell,
   Flame,
   Save,
+  Check,
 } from "lucide-react";
 import { DEMO_MODE, DEMO_PROFILE, DEMO_STREAK } from "@/lib/demo-data";
-import type { Profile, Streak } from "@/lib/types";
+import { LIMITATION_OPTIONS } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import type { Profile, Streak, Gender, Limitation } from "@/lib/types";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -25,7 +28,11 @@ export default function ProfilePage() {
   const [totalPoints, setTotalPoints] = useState(0);
   const [totalWorkouts, setTotalWorkouts] = useState(0);
   const [displayName, setDisplayName] = useState("");
+  const [gender, setGender] = useState<Gender | null>(null);
+  const [limitations, setLimitations] = useState<Limitation[]>([]);
+  const [pushupCount, setPushupCount] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -60,6 +67,13 @@ export default function ProfilePage() {
 
       setProfile(profileRes.data);
       setDisplayName(profileRes.data?.display_name || "");
+      setGender(profileRes.data?.gender || null);
+      setLimitations(profileRes.data?.limitations || []);
+      setPushupCount(
+        profileRes.data?.pushup_count != null
+          ? String(profileRes.data.pushup_count)
+          : ""
+      );
       setStreak(streakRes.data);
       setTotalPoints(
         (pointsRes.data || []).reduce(
@@ -73,9 +87,16 @@ export default function ProfilePage() {
     load();
   }, []);
 
+  function toggleLimitation(lim: Limitation) {
+    setLimitations((prev) =>
+      prev.includes(lim) ? prev.filter((l) => l !== lim) : [...prev, lim]
+    );
+  }
+
   async function handleSave() {
     if (!displayName.trim()) return;
     setSaving(true);
+    setSaved(false);
 
     const supabase = createClient();
     const {
@@ -85,10 +106,17 @@ export default function ProfilePage() {
 
     await supabase
       .from("profiles")
-      .update({ display_name: displayName.trim() })
+      .update({
+        display_name: displayName.trim(),
+        gender,
+        limitations,
+        pushup_count: pushupCount ? parseInt(pushupCount, 10) : null,
+      })
       .eq("id", user.id);
 
     setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   }
 
   async function handleSignOut() {
@@ -146,19 +174,105 @@ export default function ProfilePage() {
       {/* Edit Name */}
       <Card className="space-y-3">
         <h2 className="text-sm font-semibold text-slate-300">Display Name</h2>
+        <Input
+          id="displayName"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          placeholder="Your name"
+        />
+      </Card>
+
+      {/* Gender */}
+      <Card className="space-y-3">
+        <h2 className="text-sm font-semibold text-slate-300">Gender</h2>
         <div className="flex gap-2">
-          <Input
-            id="displayName"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Your name"
-            className="flex-1"
-          />
-          <Button onClick={handleSave} loading={saving} size="md">
-            <Save className="h-4 w-4" />
-          </Button>
+          {(["male", "female", "other"] as const).map((g) => (
+            <button
+              key={g}
+              onClick={() => setGender(g)}
+              className={cn(
+                "flex-1 rounded-xl border px-3 py-2.5 text-sm font-medium capitalize transition-all",
+                gender === g
+                  ? "border-orange-500 bg-orange-500/10 text-orange-400"
+                  : "border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600"
+              )}
+            >
+              {g}
+            </button>
+          ))}
         </div>
       </Card>
+
+      {/* Physical Limitations */}
+      <Card className="space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-300">
+            Physical Limitations
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Select any areas with injuries or pain so AI avoids exercises that stress them
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {LIMITATION_OPTIONS.map((lim) => {
+            const isSelected = limitations.includes(lim.value);
+            return (
+              <button
+                key={lim.value}
+                onClick={() => toggleLimitation(lim.value)}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
+                  isSelected
+                    ? "border-red-500 bg-red-500/10 text-red-400"
+                    : "border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600"
+                )}
+              >
+                {lim.label}
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Pushup Count */}
+      <Card className="space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-300">
+            Fitness Level
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            How many push-ups can you do in one set? This helps calibrate workout difficulty.
+          </p>
+        </div>
+        <Input
+          id="pushupCount"
+          type="number"
+          min="0"
+          max="200"
+          placeholder="e.g. 15"
+          value={pushupCount}
+          onChange={(e) => setPushupCount(e.target.value)}
+        />
+      </Card>
+
+      {/* Save */}
+      <Button
+        className="w-full"
+        onClick={handleSave}
+        loading={saving}
+      >
+        {saved ? (
+          <>
+            <Check className="h-4 w-4 mr-2" />
+            Saved!
+          </>
+        ) : (
+          <>
+            <Save className="h-4 w-4 mr-2" />
+            Save Profile
+          </>
+        )}
+      </Button>
 
       {/* Sign out */}
       <Button

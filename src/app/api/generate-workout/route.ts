@@ -16,13 +16,38 @@ export async function POST(request: Request) {
     );
   }
 
-  const { focusAreas, durationMinutes } = (await request.json()) as {
-    focusAreas: FocusArea[];
-    durationMinutes: number;
-  };
+  const { focusAreas, durationMinutes, gender, limitations, pushupCount } =
+    (await request.json()) as {
+      focusAreas: FocusArea[];
+      durationMinutes: number;
+      gender?: string | null;
+      limitations?: string[];
+      pushupCount?: number | null;
+    };
 
-  const prompt = `You are a fitness coach. Create a ${durationMinutes}-minute workout targeting: ${focusAreas.join(", ")}.
+  // Build personalization context
+  const personalization: string[] = [];
+  if (gender) personalization.push(`The user is ${gender}.`);
+  if (limitations && limitations.length > 0) {
+    personalization.push(
+      `IMPORTANT: The user has physical limitations in their ${limitations.join(", ")}. Avoid exercises that put stress on these areas. Provide safe alternatives instead.`
+    );
+  }
+  if (pushupCount != null) {
+    let level = "beginner";
+    if (pushupCount >= 20) level = "intermediate";
+    if (pushupCount >= 40) level = "advanced";
+    personalization.push(
+      `The user can do ${pushupCount} push-ups (${level} level). Adjust exercise difficulty, reps, and sets accordingly.`
+    );
+  }
 
+  const personalizationBlock =
+    personalization.length > 0
+      ? `\n\nUser profile:\n${personalization.join("\n")}\n`
+      : "";
+
+  const prompt = `You are a fitness coach. Create a ${durationMinutes}-minute workout targeting: ${focusAreas.join(", ")}.${personalizationBlock}
 Only bodyweight and kettlebell exercises. Include warmup (3 exercises), main (6 exercises), cooldown (3 exercises).
 
 Respond with ONLY this JSON, no other text:

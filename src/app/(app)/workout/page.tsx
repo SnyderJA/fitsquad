@@ -26,12 +26,34 @@ export default function NewWorkoutPage() {
     let exercises;
     let source: "ai" | "local" = "local";
 
+    // Fetch profile for AI personalization
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    let profileData = null;
+    if (user) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("gender, limitations, pushup_count")
+        .eq("id", user.id)
+        .single();
+      profileData = data;
+    }
+
     // Try AI generation first, fall back to local generator
     try {
       const aiResponse = await fetch("/api/generate-workout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ focusAreas, durationMinutes: duration }),
+        body: JSON.stringify({
+          focusAreas,
+          durationMinutes: duration,
+          gender: profileData?.gender || null,
+          limitations: profileData?.limitations || [],
+          pushupCount: profileData?.pushup_count || null,
+        }),
       });
 
       if (aiResponse.ok) {
@@ -60,11 +82,6 @@ export default function NewWorkoutPage() {
     }
 
     setAiSource(source);
-
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
     if (!user) {
       setLoading(false);

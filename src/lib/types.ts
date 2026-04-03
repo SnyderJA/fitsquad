@@ -39,10 +39,27 @@ export interface GeneratedWorkout {
   cooldown: Exercise[];
 }
 
+export type Gender = "male" | "female" | "other";
+
+export const LIMITATION_OPTIONS = [
+  { value: "back", label: "Back" },
+  { value: "knees", label: "Knees" },
+  { value: "shoulders", label: "Shoulders" },
+  { value: "wrists", label: "Wrists" },
+  { value: "hips", label: "Hips" },
+  { value: "neck", label: "Neck" },
+  { value: "ankles", label: "Ankles" },
+] as const;
+
+export type Limitation = (typeof LIMITATION_OPTIONS)[number]["value"];
+
 export interface Profile {
   id: string;
   display_name: string;
   avatar_url: string | null;
+  gender: Gender | null;
+  limitations: Limitation[];
+  pushup_count: number | null;
   created_at: string;
 }
 
