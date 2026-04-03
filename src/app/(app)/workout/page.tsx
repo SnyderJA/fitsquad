@@ -19,26 +19,54 @@ export default function NewWorkoutPage() {
     if (focusAreas.length === 0) return;
     setLoading(true);
 
-    const workout = generateWorkout(focusAreas, duration);
+    let exercises;
+
+    // Try AI generation first, fall back to local generator
+    try {
+      const aiResponse = await fetch("/api/generate-workout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ focusAreas, durationMinutes: duration }),
+      });
+
+      if (aiResponse.ok) {
+        const aiWorkout = await aiResponse.json();
+        exercises = [
+          ...aiWorkout.warmup,
+          ...aiWorkout.exercises,
+          ...aiWorkout.cooldown,
+        ];
+      } else {
+        throw new Error("AI unavailable");
+      }
+    } catch {
+      // Fallback to local generator
+      const workout = generateWorkout(focusAreas, duration);
+      exercises = [
+        ...workout.warmup.map((e) => ({ ...e, phase: "warmup" })),
+        ...workout.exercises.map((e) => ({ ...e, phase: "main" })),
+        ...workout.cooldown.map((e) => ({ ...e, phase: "cooldown" })),
+      ];
+    }
+
     const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from("workouts")
       .insert({
         user_id: user.id,
         date: new Date().toISOString().split("T")[0],
-        focus_areas: workout.focusAreas,
-        duration_minutes: workout.durationMinutes,
-        exercises: [
-          ...workout.warmup.map((e) => ({ ...e, phase: "warmup" })),
-          ...workout.exercises.map((e) => ({ ...e, phase: "main" })),
-          ...workout.cooldown.map((e) => ({ ...e, phase: "cooldown" })),
-        ],
+        focus_areas: focusAreas,
+        duration_minutes: duration,
+        exercises,
         completed: false,
       })
       .select()
