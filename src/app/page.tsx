@@ -49,11 +49,21 @@ export default function LandingPage() {
         </div>
 
         <Link
-          href="/login"
+          href="/signup"
           className="block w-full rounded-xl bg-orange-500 px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-orange-500/25 hover:bg-orange-600 transition-all active:scale-[0.98]"
         >
           Get Started
         </Link>
+
+        <p className="text-center text-sm text-slate-500">
+          Already have an account?{" "}
+          <Link
+            href="/login"
+            className="text-orange-500 hover:text-orange-400 font-medium"
+          >
+            Sign in
+          </Link>
+        </p>
       </div>
     </main>
   );

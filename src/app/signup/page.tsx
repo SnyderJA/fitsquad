@@ -8,22 +8,45 @@ import { Input } from "@/components/ui/input";
 import { Dumbbell, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError("");
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords don't match");
+      return;
+    }
+
+    if (!displayName.trim()) {
+      setError("Display name is required");
+      return;
+    }
+
+    setLoading(true);
+
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          display_name: displayName.trim(),
+        },
+      },
     });
 
     setLoading(false);
@@ -51,13 +74,22 @@ export default function LoginPage() {
             <Dumbbell className="h-6 w-6" />
             <span className="text-lg font-bold text-white">FitSquad</span>
           </div>
-          <h1 className="text-2xl font-bold text-white">Sign in</h1>
+          <h1 className="text-2xl font-bold text-white">Create account</h1>
           <p className="text-sm text-slate-400">
-            Enter your email and password
+            Sign up to start tracking your workouts
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleSignup} className="space-y-4">
+          <Input
+            id="displayName"
+            label="Display Name"
+            type="text"
+            placeholder="e.g. Marcus"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            required
+          />
           <Input
             id="email"
             label="Email"
@@ -71,26 +103,35 @@ export default function LoginPage() {
             id="password"
             label="Password"
             type="password"
-            placeholder="Your password"
+            placeholder="At least 6 characters"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <Input
+            id="confirmPassword"
+            label="Confirm Password"
+            type="password"
+            placeholder="Confirm your password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             required
           />
           {error && (
             <p className="text-sm text-red-400">{error}</p>
           )}
           <Button type="submit" className="w-full" loading={loading}>
-            Sign In
+            Create Account
           </Button>
         </form>
 
         <p className="text-center text-sm text-slate-500">
-          Don&apos;t have an account?{" "}
+          Already have an account?{" "}
           <Link
-            href="/signup"
+            href="/login"
             className="text-orange-500 hover:text-orange-400 font-medium"
           >
-            Sign up
+            Sign in
           </Link>
         </p>
       </div>
