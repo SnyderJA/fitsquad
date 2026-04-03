@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import type { FocusArea } from "@/lib/types";
 
+// Allow up to 60s for AI generation on Vercel
+export const maxDuration = 60;
+
 const HF_API_URL = "https://router.huggingface.co/v1/chat/completions";
 const HF_MODEL = "Qwen/Qwen2.5-72B-Instruct";
 
@@ -27,7 +30,7 @@ Respond with ONLY this JSON, no other text:
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000);
+    const timeout = setTimeout(() => controller.abort(), 55000);
 
     const response = await fetch(HF_API_URL, {
       method: "POST",
