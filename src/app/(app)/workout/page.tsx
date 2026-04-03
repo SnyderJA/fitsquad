@@ -83,7 +83,7 @@ export default function NewWorkoutPage() {
 
     if (dbError) {
       console.error("Supabase error:", dbError);
-      setError("Failed to save workout. Please try again.");
+      setError(`Save failed: ${dbError.message} (${dbError.code})`);
       return;
     }
 
