@@ -14,10 +14,14 @@ export default function NewWorkoutPage() {
   const [focusAreas, setFocusAreas] = useState<FocusArea[]>([]);
   const [duration, setDuration] = useState(35);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [aiSource, setAiSource] = useState<"ai" | "local" | "">("");
 
   async function handleGenerate() {
     if (focusAreas.length === 0) return;
     setLoading(true);
+    setError("");
+    setAiSource("");
 
     let exercises;
 
@@ -36,6 +40,7 @@ export default function NewWorkoutPage() {
           ...aiWorkout.exercises,
           ...aiWorkout.cooldown,
         ];
+        setAiSource("ai");
       } else {
         throw new Error("AI unavailable");
       }
@@ -47,6 +52,7 @@ export default function NewWorkoutPage() {
         ...workout.exercises.map((e) => ({ ...e, phase: "main" })),
         ...workout.cooldown.map((e) => ({ ...e, phase: "cooldown" })),
       ];
+      setAiSource("local");
     }
 
     const supabase = createClient();
@@ -56,10 +62,11 @@ export default function NewWorkoutPage() {
 
     if (!user) {
       setLoading(false);
+      setError("You need to be signed in to generate workouts.");
       return;
     }
 
-    const { data, error } = await supabase
+    const { data, error: dbError } = await supabase
       .from("workouts")
       .insert({
         user_id: user.id,
@@ -74,7 +81,13 @@ export default function NewWorkoutPage() {
 
     setLoading(false);
 
-    if (data && !error) {
+    if (dbError) {
+      console.error("Supabase error:", dbError);
+      setError("Failed to save workout. Please try again.");
+      return;
+    }
+
+    if (data) {
       router.push(`/workout/${data.id}`);
     }
   }
@@ -126,6 +139,13 @@ export default function NewWorkoutPage() {
         </p>
       </div>
 
+      {/* Error message */}
+      {error && (
+        <div className="rounded-xl bg-red-500/10 border border-red-500/30 p-3">
+          <p className="text-sm text-red-400">{error}</p>
+        </div>
+      )}
+
       {/* Generate */}
       <Button
         className="w-full"
@@ -135,7 +155,7 @@ export default function NewWorkoutPage() {
         disabled={focusAreas.length === 0}
       >
         <Sparkles className="h-4 w-4 mr-2" />
-        Generate Workout
+        {loading ? "Generating..." : "Generate Workout"}
       </Button>
     </div>
   );
