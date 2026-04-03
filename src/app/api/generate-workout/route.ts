@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { FocusArea } from "@/lib/types";
 
-const HF_API_URL =
-  "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.3/v1/chat/completions";
+const HF_API_URL = "https://router.huggingface.co/v1/chat/completions";
+const HF_MODEL = "Qwen/Qwen2.5-72B-Instruct";
 
 export async function POST(request: Request) {
   const apiKey = process.env.HF_API_KEY;
@@ -36,6 +36,7 @@ Respond with ONLY this JSON, no other text:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        model: HF_MODEL,
         messages: [{ role: "user", content: prompt }],
         max_tokens: 2000,
         temperature: 0.7,
