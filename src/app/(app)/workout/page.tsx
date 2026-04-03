@@ -42,10 +42,13 @@ export default function NewWorkoutPage() {
         ];
         setAiSource("ai");
       } else {
-        throw new Error("AI unavailable");
+        const errBody = await aiResponse.json().catch(() => ({}));
+        console.error("AI API error:", aiResponse.status, errBody);
+        throw new Error(errBody?.error || "AI unavailable");
       }
-    } catch {
+    } catch (err) {
       // Fallback to local generator
+      console.warn("Falling back to local generator:", err);
       const workout = generateWorkout(focusAreas, duration);
       exercises = [
         ...workout.warmup.map((e) => ({ ...e, phase: "warmup" })),
