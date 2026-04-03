@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { POINTS, getPointsReason } from "@/lib/points";
 import {
   Dumbbell,
@@ -14,12 +15,20 @@ import {
   Trophy,
   Sparkles,
   Cpu,
+  ThumbsUp,
+  ThumbsDown,
+  Meh,
+  Flame,
+  Snowflake,
+  Target,
 } from "lucide-react";
-import type { Workout, Exercise } from "@/lib/types";
+import type { Workout, Exercise, Difficulty, Enjoyment } from "@/lib/types";
 
 interface WorkoutExercise extends Exercise {
   phase: "warmup" | "main" | "cooldown";
 }
+
+type Screen = "workout" | "rating";
 
 export default function WorkoutDetailPage() {
   const params = useParams();
@@ -29,6 +38,10 @@ export default function WorkoutDetailPage() {
     new Set()
   );
   const [completing, setCompleting] = useState(false);
+  const [screen, setScreen] = useState<Screen>("workout");
+  const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
+  const [enjoyment, setEnjoyment] = useState<Enjoyment | null>(null);
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -99,10 +112,7 @@ export default function WorkoutDetailPage() {
         newStreak = currentStreak.current_streak;
       }
 
-      const longestStreak = Math.max(
-        newStreak,
-        currentStreak.longest_streak
-      );
+      const longestStreak = Math.max(newStreak, currentStreak.longest_streak);
 
       await supabase
         .from("streaks")
@@ -113,7 +123,6 @@ export default function WorkoutDetailPage() {
         })
         .eq("user_id", user.id);
 
-      // Streak bonus
       if (newStreak > 1) {
         await supabase.from("points").insert({
           user_id: user.id,
@@ -124,6 +133,58 @@ export default function WorkoutDetailPage() {
     }
 
     setCompleting(false);
+    setWorkout({ ...workout, completed: true });
+    setScreen("rating");
+  }
+
+  async function submitFeedback() {
+    if (!workout || !difficulty || !enjoyment) return;
+    setSubmittingFeedback(true);
+
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Save feedback
+    await supabase.from("workout_feedback").insert({
+      workout_id: workout.id,
+      user_id: user.id,
+      difficulty,
+      enjoyment,
+    });
+
+    // If user hated it, block all main exercises from this workout
+    if (enjoyment === "hated") {
+      const rawExercises = workout.exercises as unknown as Record<
+        string,
+        unknown
+      >[];
+      const mainExercises = rawExercises.filter(
+        (e) =>
+          e &&
+          typeof e === "object" &&
+          !("_meta" in e) &&
+          e.phase === "main"
+      );
+
+      const blocks = mainExercises
+        .map((e) => ({
+          user_id: user.id,
+          exercise_name: String(e.name),
+        }))
+        .filter((b) => b.exercise_name);
+
+      if (blocks.length > 0) {
+        // Use upsert to avoid duplicates
+        await supabase
+          .from("blocked_exercises")
+          .upsert(blocks, { onConflict: "user_id,exercise_name" });
+      }
+    }
+
+    setSubmittingFeedback(false);
     router.push("/dashboard");
   }
 
@@ -135,8 +196,13 @@ export default function WorkoutDetailPage() {
     );
   }
 
-  const rawExercises = workout.exercises as unknown as Record<string, unknown>[];
-  const metaEntry = rawExercises.find((e) => e && typeof e === "object" && "_meta" in e);
+  const rawExercises = workout.exercises as unknown as Record<
+    string,
+    unknown
+  >[];
+  const metaEntry = rawExercises.find(
+    (e) => e && typeof e === "object" && "_meta" in e
+  );
   const meta = metaEntry as { _meta: { source: string } } | undefined;
   const aiSource = meta?._meta?.source || "local";
   const exercises = rawExercises.filter(
@@ -144,8 +210,148 @@ export default function WorkoutDetailPage() {
   ) as unknown as WorkoutExercise[];
   const allCompleted = completedExercises.size === exercises.length;
   const phases = ["warmup", "main", "cooldown"] as const;
-  const phaseLabels = { warmup: "Warm-up", main: "Workout", cooldown: "Cool-down" };
+  const phaseLabels = {
+    warmup: "Warm-up",
+    main: "Workout",
+    cooldown: "Cool-down",
+  };
 
+  // Rating screen
+  if (screen === "rating") {
+    return (
+      <div className="mx-auto max-w-md px-4 py-6 space-y-8">
+        <div className="text-center space-y-2 pt-8">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
+            <Trophy className="h-8 w-8 text-green-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-white">Workout Complete!</h1>
+          <p className="text-sm text-slate-400">+10 points earned</p>
+        </div>
+
+        {/* Difficulty */}
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-slate-300 text-center">
+            How was the difficulty?
+          </h2>
+          <div className="flex gap-2">
+            {(
+              [
+                {
+                  value: "easy" as Difficulty,
+                  label: "Easy",
+                  icon: Snowflake,
+                  color: "blue",
+                },
+                {
+                  value: "just_right" as Difficulty,
+                  label: "Just Right",
+                  icon: Target,
+                  color: "green",
+                },
+                {
+                  value: "hard" as Difficulty,
+                  label: "Hard",
+                  icon: Flame,
+                  color: "red",
+                },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setDifficulty(opt.value)}
+                className={cn(
+                  "flex-1 flex flex-col items-center gap-1.5 rounded-xl border px-3 py-4 transition-all",
+                  difficulty === opt.value
+                    ? opt.color === "blue"
+                      ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                      : opt.color === "green"
+                      ? "border-green-500 bg-green-500/10 text-green-400"
+                      : "border-red-500 bg-red-500/10 text-red-400"
+                    : "border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600"
+                )}
+              >
+                <opt.icon className="h-5 w-5" />
+                <span className="text-xs font-medium">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Enjoyment */}
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-slate-300 text-center">
+            Did you enjoy it?
+          </h2>
+          <div className="flex gap-2">
+            {(
+              [
+                {
+                  value: "liked" as Enjoyment,
+                  label: "Liked It",
+                  icon: ThumbsUp,
+                  color: "green",
+                },
+                {
+                  value: "ok" as Enjoyment,
+                  label: "Just OK",
+                  icon: Meh,
+                  color: "yellow",
+                },
+                {
+                  value: "hated" as Enjoyment,
+                  label: "Hated It",
+                  icon: ThumbsDown,
+                  color: "red",
+                },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setEnjoyment(opt.value)}
+                className={cn(
+                  "flex-1 flex flex-col items-center gap-1.5 rounded-xl border px-3 py-4 transition-all",
+                  enjoyment === opt.value
+                    ? opt.color === "green"
+                      ? "border-green-500 bg-green-500/10 text-green-400"
+                      : opt.color === "yellow"
+                      ? "border-yellow-500 bg-yellow-500/10 text-yellow-400"
+                      : "border-red-500 bg-red-500/10 text-red-400"
+                    : "border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600"
+                )}
+              >
+                <opt.icon className="h-5 w-5" />
+                <span className="text-xs font-medium">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+          {enjoyment === "hated" && (
+            <p className="text-xs text-red-400 text-center">
+              These exercises will be removed from your future workouts
+            </p>
+          )}
+        </div>
+
+        <Button
+          className="w-full"
+          size="lg"
+          onClick={submitFeedback}
+          loading={submittingFeedback}
+          disabled={!difficulty || !enjoyment}
+        >
+          Submit & Continue
+        </Button>
+
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="w-full text-center text-xs text-slate-600 hover:text-slate-400"
+        >
+          Skip feedback
+        </button>
+      </div>
+    );
+  }
+
+  // Workout screen
   return (
     <div className="mx-auto max-w-md px-4 py-6 space-y-6">
       <button
@@ -177,9 +383,13 @@ export default function WorkoutDetailPage() {
             }`}
           >
             {aiSource === "ai" ? (
-              <><Sparkles className="h-3 w-3" /> AI Generated</>
+              <>
+                <Sparkles className="h-3 w-3" /> AI Generated
+              </>
             ) : (
-              <><Cpu className="h-3 w-3" /> Preset Workout</>
+              <>
+                <Cpu className="h-3 w-3" /> Preset Workout
+              </>
             )}
           </span>
           <div className="flex items-center gap-3 text-sm text-slate-400">
@@ -211,7 +421,7 @@ export default function WorkoutDetailPage() {
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               {phaseLabels[phase]}
             </h2>
-            {phaseExercises.map((exercise, _phaseIdx) => {
+            {phaseExercises.map((exercise) => {
               const globalIdx = exercises.indexOf(exercise);
               const isDone = completedExercises.has(globalIdx);
 

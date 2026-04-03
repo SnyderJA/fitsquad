@@ -23,6 +23,8 @@ export async function POST(request: Request) {
     limitations,
     pushupCount,
     kettlebellWeights,
+    blockedExercises,
+    lastDifficulty,
   } = (await request.json()) as {
     focusAreas: FocusArea[];
     durationMinutes: number;
@@ -30,6 +32,8 @@ export async function POST(request: Request) {
     limitations?: string[];
     pushupCount?: number | null;
     kettlebellWeights?: number[];
+    blockedExercises?: string[];
+    lastDifficulty?: string | null;
   };
 
   // Build personalization context
@@ -51,6 +55,20 @@ export async function POST(request: Request) {
   if (kettlebellWeights && kettlebellWeights.length > 0) {
     personalization.push(
       `The user has these kettlebells available: ${kettlebellWeights.map((w) => `${w} lbs`).join(", ")}. For each kettlebell exercise, include a "suggestedWeight" field with the recommended weight from their available kettlebells (e.g. "25 lbs"). Choose appropriate weights based on the exercise and the user's fitness level.`
+    );
+  }
+  if (blockedExercises && blockedExercises.length > 0) {
+    personalization.push(
+      `NEVER include these exercises (the user hated them): ${blockedExercises.join(", ")}. Use different exercises instead.`
+    );
+  }
+  if (lastDifficulty === "easy") {
+    personalization.push(
+      `The user's last workout was too easy. Make this one HARDER: increase reps, add more sets, reduce rest time, or suggest heavier weights.`
+    );
+  } else if (lastDifficulty === "hard") {
+    personalization.push(
+      `The user's last workout was too hard. Make this one EASIER: reduce reps, fewer sets, more rest time, or suggest lighter weights.`
     );
   }
 

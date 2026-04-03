@@ -101,6 +101,25 @@ export interface GroupMember {
   profiles?: Profile;
 }
 
+export type Difficulty = "easy" | "just_right" | "hard";
+export type Enjoyment = "liked" | "ok" | "hated";
+
+export interface WorkoutFeedback {
+  id: string;
+  workout_id: string;
+  user_id: string;
+  difficulty: Difficulty;
+  enjoyment: Enjoyment;
+  created_at: string;
+}
+
+export interface BlockedExercise {
+  id: string;
+  user_id: string;
+  exercise_name: string;
+  created_at: string;
+}
+
 export interface Streak {
   id: string;
   user_id: string;

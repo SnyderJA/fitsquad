@@ -33,13 +33,33 @@ export default function NewWorkoutPage() {
     } = await supabase.auth.getUser();
 
     let profileData = null;
+    let blockedExercises: string[] = [];
+    let lastDifficulty: string | null = null;
+
     if (user) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("gender, limitations, pushup_count, kettlebell_weights")
-        .eq("id", user.id)
-        .single();
-      profileData = data;
+      const [profileRes, blockedRes, feedbackRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("gender, limitations, pushup_count, kettlebell_weights")
+          .eq("id", user.id)
+          .single(),
+        supabase
+          .from("blocked_exercises")
+          .select("exercise_name")
+          .eq("user_id", user.id),
+        supabase
+          .from("workout_feedback")
+          .select("difficulty")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      profileData = profileRes.data;
+      blockedExercises = (blockedRes.data || []).map(
+        (b: { exercise_name: string }) => b.exercise_name
+      );
+      lastDifficulty = feedbackRes.data?.difficulty || null;
     }
 
     // Try AI generation first, fall back to local generator
@@ -54,6 +74,8 @@ export default function NewWorkoutPage() {
           limitations: profileData?.limitations || [],
           pushupCount: profileData?.pushup_count || null,
           kettlebellWeights: profileData?.kettlebell_weights || [],
+          blockedExercises,
+          lastDifficulty,
         }),
       });
 
