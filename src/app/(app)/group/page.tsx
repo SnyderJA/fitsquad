@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Leaderboard } from "@/components/leaderboard";
-import { Users, Plus, Copy, Check, UserPlus } from "lucide-react";
+import { Users, Plus, Copy, Check, UserPlus, RefreshCw } from "lucide-react";
 import {
   DEMO_MODE,
   DEMO_FRIENDS,
@@ -22,9 +22,9 @@ export default function GroupPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [copied, setCopied] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    async function load() {
+  async function load(isRefresh = false) {
       if (DEMO_MODE) {
         setUserId("demo-user");
         setGroups([
@@ -96,9 +96,16 @@ export default function GroupPage() {
       }
 
       setLoading(false);
-    }
-    load();
-  }, []);
+      setRefreshing(false);
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await load(true);
+  }
 
   async function copyInviteCode(code: string) {
     await navigator.clipboard.writeText(code);
@@ -117,7 +124,16 @@ export default function GroupPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white">My Squad</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-bold text-white">My Squad</h1>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="text-slate-500 hover:text-orange-400 transition-colors"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+          </button>
+        </div>
         <div className="flex gap-2">
           <Link href="/group/join">
             <Button variant="secondary" size="sm">
