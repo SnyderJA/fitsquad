@@ -57,6 +57,7 @@ export const DEMO_TODAY_WORKOUT: Workout = {
     { name: "Deep Breathing", type: "bodyweight", muscleGroups: ["full_body"], sets: 1, reps: "60s", restSeconds: 0, description: "Slow diaphragmatic breathing", phase: "cooldown" },
   ] as unknown as Workout["exercises"],
   completed: false,
+  archived: false,
   created_at: today,
 };
 
@@ -70,6 +71,7 @@ export const DEMO_WEEK_WORKOUTS: Workout[] = [
     duration_minutes: 40,
     exercises: [],
     completed: true,
+    archived: false,
     created_at: yesterday,
   },
   {
@@ -80,6 +82,7 @@ export const DEMO_WEEK_WORKOUTS: Workout[] = [
     duration_minutes: 35,
     exercises: [],
     completed: true,
+    archived: false,
     created_at: twoDaysAgo,
   },
 ];
@@ -111,6 +114,7 @@ export const DEMO_FRIENDS: {
       duration_minutes: 40,
       exercises: [],
       completed: true,
+      archived: false,
       created_at: today,
     },
     streak: {
@@ -166,6 +170,7 @@ export const DEMO_FRIENDS: {
       duration_minutes: 30,
       exercises: [],
       completed: false,
+      archived: false,
       created_at: today,
     },
     streak: {

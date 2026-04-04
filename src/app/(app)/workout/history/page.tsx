@@ -23,6 +23,7 @@ export default function WorkoutHistoryPage() {
         .from("workouts")
         .select("*")
         .eq("user_id", user.id)
+        .eq("archived", false)
         .order("date", { ascending: false })
         .limit(50);
 

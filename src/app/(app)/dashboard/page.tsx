@@ -72,6 +72,7 @@ export default function DashboardPage() {
             .select("*")
             .eq("user_id", user.id)
             .eq("date", today)
+            .eq("archived", false)
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle(),
@@ -79,6 +80,7 @@ export default function DashboardPage() {
             .from("workouts")
             .select("*")
             .eq("user_id", user.id)
+            .eq("archived", false)
             .gte("date", weekAgo)
             .order("date", { ascending: false }),
           supabase

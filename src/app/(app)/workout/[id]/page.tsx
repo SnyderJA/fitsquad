@@ -21,6 +21,7 @@ import {
   Flame,
   Snowflake,
   Target,
+  Archive,
 } from "lucide-react";
 import type { Workout, Exercise, Difficulty, Enjoyment } from "@/lib/types";
 
@@ -511,6 +512,26 @@ export default function WorkoutDetailPage() {
           {allCompleted
             ? "Complete Workout (+10 pts)"
             : `${completedExercises.size}/${exercises.length} exercises done`}
+        </Button>
+      )}
+
+      {/* Archive button — show on completed workouts */}
+      {workout.completed && !workout.archived && (
+        <Button
+          variant="ghost"
+          className="w-full"
+          size="sm"
+          onClick={async () => {
+            const supabase = createClient();
+            await supabase
+              .from("workouts")
+              .update({ archived: true })
+              .eq("id", workout.id);
+            router.push("/dashboard");
+          }}
+        >
+          <Archive className="h-4 w-4 mr-2" />
+          Archive Workout
         </Button>
       )}
     </div>

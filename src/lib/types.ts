@@ -94,6 +94,7 @@ export interface Workout {
   duration_minutes: number;
   exercises: Exercise[];
   completed: boolean;
+  archived: boolean;
   created_at: string;
 }
 
