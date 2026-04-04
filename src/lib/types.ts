@@ -59,6 +59,18 @@ export const KETTLEBELL_WEIGHTS = [
   42.5, 45, 47.5, 50, 52.5, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100,
 ] as const;
 
+export type DayOfWeek = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+
+export const DAYS_OF_WEEK: { value: DayOfWeek; label: string }[] = [
+  { value: "mon", label: "Mon" },
+  { value: "tue", label: "Tue" },
+  { value: "wed", label: "Wed" },
+  { value: "thu", label: "Thu" },
+  { value: "fri", label: "Fri" },
+  { value: "sat", label: "Sat" },
+  { value: "sun", label: "Sun" },
+];
+
 export interface Profile {
   id: string;
   display_name: string;
@@ -67,6 +79,9 @@ export interface Profile {
   limitations: Limitation[];
   pushup_count: number | null;
   kettlebell_weights: number[];
+  reminder_enabled: boolean;
+  reminder_days: DayOfWeek[];
+  reminder_hour: number;
   created_at: string;
 }
 

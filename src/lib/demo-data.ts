@@ -24,6 +24,9 @@ export const DEMO_PROFILE: Profile = {
   limitations: [],
   pushup_count: null,
   kettlebell_weights: [],
+  reminder_enabled: false,
+  reminder_days: [],
+  reminder_hour: 7,
   created_at: "2025-01-01",
 };
 
@@ -95,6 +98,9 @@ export const DEMO_FRIENDS: {
       limitations: [],
       pushup_count: null,
       kettlebell_weights: [],
+      reminder_enabled: false,
+      reminder_days: [],
+      reminder_hour: 7,
       created_at: "2025-01-01",
     },
     todayWorkout: {
@@ -124,6 +130,9 @@ export const DEMO_FRIENDS: {
       limitations: [],
       pushup_count: null,
       kettlebell_weights: [],
+      reminder_enabled: false,
+      reminder_days: [],
+      reminder_hour: 7,
       created_at: "2025-01-01",
     },
     todayWorkout: null,
@@ -144,6 +153,9 @@ export const DEMO_FRIENDS: {
       limitations: [],
       pushup_count: null,
       kettlebell_weights: [],
+      reminder_enabled: false,
+      reminder_days: [],
+      reminder_hour: 7,
       created_at: "2025-01-01",
     },
     todayWorkout: {

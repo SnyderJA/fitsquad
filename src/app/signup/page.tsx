@@ -54,6 +54,16 @@ export default function SignupPage() {
     if (error) {
       setError(error.message);
     } else {
+      // Send welcome email in the background
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        fetch("/api/send-welcome", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        }).catch(() => {}); // fire and forget
+      }
       router.push("/onboarding");
     }
   }

@@ -17,9 +17,9 @@ import {
   Check,
 } from "lucide-react";
 import { DEMO_MODE, DEMO_PROFILE, DEMO_STREAK } from "@/lib/demo-data";
-import { LIMITATION_OPTIONS, KETTLEBELL_WEIGHTS } from "@/lib/types";
+import { LIMITATION_OPTIONS, KETTLEBELL_WEIGHTS, DAYS_OF_WEEK } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import type { Profile, Streak, Gender, Limitation } from "@/lib/types";
+import type { Profile, Streak, Gender, Limitation, DayOfWeek } from "@/lib/types";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -32,6 +32,9 @@ export default function ProfilePage() {
   const [limitations, setLimitations] = useState<Limitation[]>([]);
   const [pushupCount, setPushupCount] = useState<string>("");
   const [kettlebellWeights, setKettlebellWeights] = useState<number[]>([]);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderDays, setReminderDays] = useState<DayOfWeek[]>([]);
+  const [reminderHour, setReminderHour] = useState(7);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -76,6 +79,9 @@ export default function ProfilePage() {
           : ""
       );
       setKettlebellWeights(profileRes.data?.kettlebell_weights || []);
+      setReminderEnabled(profileRes.data?.reminder_enabled || false);
+      setReminderDays(profileRes.data?.reminder_days || []);
+      setReminderHour(profileRes.data?.reminder_hour ?? 7);
       setStreak(streakRes.data);
       setTotalPoints(
         (pointsRes.data || []).reduce(
@@ -103,6 +109,12 @@ export default function ProfilePage() {
     );
   }
 
+  function toggleReminderDay(day: DayOfWeek) {
+    setReminderDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  }
+
   async function handleSave() {
     if (!displayName.trim()) return;
     setSaving(true);
@@ -122,6 +134,9 @@ export default function ProfilePage() {
         limitations,
         pushup_count: pushupCount ? parseInt(pushupCount, 10) : null,
         kettlebell_weights: kettlebellWeights,
+        reminder_enabled: reminderEnabled,
+        reminder_days: reminderDays,
+        reminder_hour: reminderHour,
       })
       .eq("id", user.id);
 
@@ -295,6 +310,82 @@ export default function ProfilePage() {
             );
           })}
         </div>
+      </Card>
+
+      {/* Workout Reminders */}
+      <Card className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-300">
+              Workout Reminders
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Get an email reminder on your workout days
+            </p>
+          </div>
+          <button
+            onClick={() => setReminderEnabled(!reminderEnabled)}
+            className={cn(
+              "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+              reminderEnabled ? "bg-orange-500" : "bg-slate-700"
+            )}
+          >
+            <span
+              className={cn(
+                "inline-block h-4 w-4 rounded-full bg-white transition-transform",
+                reminderEnabled ? "translate-x-6" : "translate-x-1"
+              )}
+            />
+          </button>
+        </div>
+
+        {reminderEnabled && (
+          <>
+            <div className="space-y-2">
+              <p className="text-xs text-slate-400">Which days?</p>
+              <div className="flex gap-1.5">
+                {DAYS_OF_WEEK.map((day) => {
+                  const isSelected = reminderDays.includes(day.value);
+                  return (
+                    <button
+                      key={day.value}
+                      onClick={() => toggleReminderDay(day.value)}
+                      className={cn(
+                        "flex-1 rounded-lg py-2 text-xs font-bold transition-all",
+                        isSelected
+                          ? "bg-orange-500/10 text-orange-400 border border-orange-500"
+                          : "bg-slate-800/50 text-slate-500 border border-slate-700 hover:border-slate-600"
+                      )}
+                    >
+                      {day.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs text-slate-400">What time?</p>
+              <select
+                value={reminderHour}
+                onChange={(e) => setReminderHour(parseInt(e.target.value))}
+                className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              >
+                {Array.from({ length: 16 }, (_, i) => i + 5).map((hour) => (
+                  <option key={hour} value={hour}>
+                    {hour === 0
+                      ? "12:00 AM"
+                      : hour < 12
+                      ? `${hour}:00 AM`
+                      : hour === 12
+                      ? "12:00 PM"
+                      : `${hour - 12}:00 PM`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
+        )}
       </Card>
 
       {/* Save */}
