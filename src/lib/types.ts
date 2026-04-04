@@ -54,7 +54,10 @@ export const LIMITATION_OPTIONS = [
 
 export type Limitation = (typeof LIMITATION_OPTIONS)[number]["value"];
 
-export const KETTLEBELL_WEIGHTS = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80, 90, 100] as const;
+export const KETTLEBELL_WEIGHTS = [
+  5, 7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30, 32.5, 35, 37.5, 40,
+  42.5, 45, 47.5, 50, 52.5, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100,
+] as const;
 
 export interface Profile {
   id: string;

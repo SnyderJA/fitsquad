@@ -215,7 +215,7 @@ export default function OnboardingPage() {
         {/* Step 4: Kettlebell Weights */}
         {step === 4 && (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-1.5 max-h-64 overflow-y-auto no-scrollbar">
               {KETTLEBELL_WEIGHTS.map((weight) => {
                 const isSelected = kettlebellWeights.includes(weight);
                 return (
@@ -223,13 +223,13 @@ export default function OnboardingPage() {
                     key={weight}
                     onClick={() => toggleWeight(weight)}
                     className={cn(
-                      "rounded-xl border px-3 py-3 text-sm font-bold transition-all",
+                      "rounded-xl border px-2 py-2.5 text-xs font-bold transition-all",
                       isSelected
                         ? "border-orange-500 bg-orange-500/10 text-orange-400"
                         : "border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600"
                     )}
                   >
-                    {weight} lbs
+                    {weight}
                   </button>
                 );
               })}

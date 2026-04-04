@@ -276,7 +276,7 @@ export default function ProfilePage() {
             Select the weights you have so the AI suggests the right one for each exercise
           </p>
         </div>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-1.5 max-h-48 overflow-y-auto no-scrollbar">
           {KETTLEBELL_WEIGHTS.map((weight) => {
             const isSelected = kettlebellWeights.includes(weight);
             return (
