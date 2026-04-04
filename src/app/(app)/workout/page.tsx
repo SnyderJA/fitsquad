@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { FocusAreaPicker } from "@/components/focus-area-picker";
 import { generateWorkout } from "@/lib/ai/generate-workout";
-import { Dumbbell, Clock, Sparkles } from "lucide-react";
+import { Dumbbell, Clock, Sparkles, MessageSquare } from "lucide-react";
 import type { FocusArea } from "@/lib/types";
 
 export default function NewWorkoutPage() {
@@ -16,9 +16,10 @@ export default function NewWorkoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [aiSource, setAiSource] = useState<"ai" | "local" | "">("");
+  const [trainerNote, setTrainerNote] = useState("");
 
   async function handleGenerate() {
-    if (focusAreas.length === 0) return;
+    if (focusAreas.length === 0 && !trainerNote.trim()) return;
     setLoading(true);
     setError("");
     setAiSource("");
@@ -76,6 +77,7 @@ export default function NewWorkoutPage() {
           kettlebellWeights: profileData?.kettlebell_weights || [],
           blockedExercises,
           lastDifficulty,
+          trainerNote: trainerNote.trim() || null,
         }),
       });
 
@@ -176,6 +178,28 @@ export default function NewWorkoutPage() {
         </div>
       </div>
 
+      {/* Tell Your Trainer */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold text-slate-300 flex items-center gap-1">
+          <MessageSquare className="h-4 w-4" />
+          Tell Your Trainer
+          <span className="text-xs font-normal text-slate-500">(optional)</span>
+        </h2>
+        <textarea
+          value={trainerNote}
+          onChange={(e) => setTrainerNote(e.target.value)}
+          placeholder="e.g. I want to tighten up my chest, my ankles are weak and need safe strengthening, I want to focus on explosive power today..."
+          className="w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"
+          rows={3}
+          maxLength={500}
+        />
+        {trainerNote.trim() && (
+          <p className="text-[10px] text-slate-600 text-right">
+            {trainerNote.length}/500
+          </p>
+        )}
+      </div>
+
       {/* Equipment note */}
       <div className="rounded-xl bg-slate-800/30 border border-slate-700/30 p-3 flex items-start gap-2">
         <Dumbbell className="h-4 w-4 text-slate-500 mt-0.5 shrink-0" />
@@ -198,7 +222,7 @@ export default function NewWorkoutPage() {
         size="lg"
         onClick={handleGenerate}
         loading={loading}
-        disabled={focusAreas.length === 0}
+        disabled={focusAreas.length === 0 && !trainerNote.trim()}
       >
         <Sparkles className="h-4 w-4 mr-2" />
         {loading ? "Generating..." : "Generate Workout"}

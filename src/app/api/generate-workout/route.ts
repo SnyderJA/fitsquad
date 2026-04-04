@@ -43,6 +43,7 @@ export async function POST(request: Request) {
     kettlebellWeights,
     blockedExercises,
     lastDifficulty,
+    trainerNote,
   } = (await request.json()) as {
     focusAreas: FocusArea[];
     durationMinutes: number;
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
     kettlebellWeights?: number[];
     blockedExercises?: string[];
     lastDifficulty?: string | null;
+    trainerNote?: string | null;
   };
 
   // Build limitation blocklist
@@ -94,13 +96,23 @@ export async function POST(request: Request) {
       `The user's last workout was too hard. Make this one EASIER: reduce reps, fewer sets, more rest time, or suggest lighter weights.`
     );
   }
+  if (trainerNote) {
+    personalization.push(
+      `SPECIAL REQUEST FROM USER: "${trainerNote}". Tailor the workout to address this specific goal or concern. Choose exercises that directly target what the user described.`
+    );
+  }
 
   const personalizationBlock =
     personalization.length > 0
       ? `\n\nUser profile:\n${personalization.join("\n")}\n`
       : "";
 
-  const prompt = `You are a kettlebell fitness coach. Create a ${durationMinutes}-minute workout targeting: ${focusAreas.join(", ")}.${personalizationBlock}
+  const focusDescription =
+    focusAreas.length > 0
+      ? `targeting: ${focusAreas.join(", ")}`
+      : "based on the user's special request below";
+
+  const prompt = `You are a kettlebell fitness coach. Create a ${durationMinutes}-minute workout ${focusDescription}.${personalizationBlock}
 IMPORTANT RULES:
 - Warm-up: bodyweight only (no kettlebells), 3 exercises
 - Main workout: KETTLEBELL ONLY exercises, 6 exercises. Every main exercise must use a kettlebell.
