@@ -93,8 +93,10 @@ export default function SignupPage() {
         <form onSubmit={handleSignup} className="space-y-4">
           <Input
             id="displayName"
+            name="name"
             label="Display Name"
             type="text"
+            autoComplete="name"
             placeholder="e.g. Marcus"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
@@ -102,8 +104,10 @@ export default function SignupPage() {
           />
           <Input
             id="email"
+            name="email"
             label="Email"
             type="email"
+            autoComplete="email"
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -111,8 +115,10 @@ export default function SignupPage() {
           />
           <Input
             id="password"
+            name="password"
             label="Password"
             type="password"
+            autoComplete="new-password"
             placeholder="At least 6 characters"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -120,8 +126,10 @@ export default function SignupPage() {
           />
           <Input
             id="confirmPassword"
+            name="confirmPassword"
             label="Confirm Password"
             type="password"
+            autoComplete="new-password"
             placeholder="Confirm your password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
