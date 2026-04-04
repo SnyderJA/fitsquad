@@ -17,6 +17,7 @@ const AREA_ICONS: Record<FocusArea, string> = {
   glutes: "\uD83C\uDF51",
   core: "\uD83E\uDD4B",
   full_body: "\u26A1",
+  custom: "\uD83C\uDFAF",
 };
 
 export function FocusAreaPicker({ selected, onChange }: FocusAreaPickerProps) {

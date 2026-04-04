@@ -6,7 +6,8 @@ export type FocusArea =
   | "legs"
   | "glutes"
   | "core"
-  | "full_body";
+  | "full_body"
+  | "custom";
 
 export const FOCUS_AREAS: { value: FocusArea; label: string }[] = [
   { value: "chest", label: "Chest" },

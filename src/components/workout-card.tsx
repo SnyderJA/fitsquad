@@ -21,9 +21,13 @@ export function WorkoutCard({ workout, showDate = true }: WorkoutCardProps) {
             {workout.focus_areas.map((area) => (
               <span
                 key={area}
-                className="rounded-full bg-orange-500/10 px-2 py-0.5 text-xs font-medium text-orange-400 capitalize"
+                className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
+                  area === "custom"
+                    ? "bg-purple-500/10 text-purple-400"
+                    : "bg-orange-500/10 text-orange-400"
+                }`}
               >
-                {area.replace("_", " ")}
+                {area === "custom" ? "Custom Training" : area.replace("_", " ")}
               </span>
             ))}
           </div>

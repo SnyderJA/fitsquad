@@ -119,9 +119,9 @@ export default function NewWorkoutPage() {
       .insert({
         user_id: user.id,
         date: new Date().toISOString().split("T")[0],
-        focus_areas: focusAreas,
+        focus_areas: focusAreas.length > 0 ? focusAreas : ["custom"],
         duration_minutes: duration,
-        exercises: [{ _meta: { source } }, ...exercises],
+        exercises: [{ _meta: { source, trainerNote: trainerNote.trim() || undefined } }, ...exercises],
         completed: false,
       })
       .select()

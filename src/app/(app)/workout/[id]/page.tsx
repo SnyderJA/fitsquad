@@ -203,8 +203,9 @@ export default function WorkoutDetailPage() {
   const metaEntry = rawExercises.find(
     (e) => e && typeof e === "object" && "_meta" in e
   );
-  const meta = metaEntry as { _meta: { source: string } } | undefined;
+  const meta = metaEntry as { _meta: { source: string; trainerNote?: string } } | undefined;
   const aiSource = meta?._meta?.source || "local";
+  const trainerNote = meta?._meta?.trainerNote || null;
   const exercises = rawExercises.filter(
     (e) => e && typeof e === "object" && !("_meta" in e)
   ) as unknown as WorkoutExercise[];
@@ -369,12 +370,21 @@ export default function WorkoutDetailPage() {
             {workout.focus_areas.map((area) => (
               <span
                 key={area}
-                className="rounded-full bg-orange-500/10 px-2 py-0.5 text-xs font-medium text-orange-400 capitalize"
+                className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
+                  area === "custom"
+                    ? "bg-purple-500/10 text-purple-400"
+                    : "bg-orange-500/10 text-orange-400"
+                }`}
               >
-                {area.replace("_", " ")}
+                {area === "custom" ? "Custom Training" : area.replace("_", " ")}
               </span>
             ))}
           </div>
+          {trainerNote && (
+            <p className="text-xs text-slate-500 italic mb-1">
+              &ldquo;{trainerNote}&rdquo;
+            </p>
+          )}
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium mb-1 ${
               aiSource === "ai"
