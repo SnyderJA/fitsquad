@@ -22,6 +22,7 @@ import {
   Snowflake,
   Target,
   Archive,
+  Trash2,
 } from "lucide-react";
 import type { Workout, Exercise, Difficulty, Enjoyment } from "@/lib/types";
 
@@ -512,6 +513,26 @@ export default function WorkoutDetailPage() {
           {allCompleted
             ? "Complete Workout (+10 pts)"
             : `${completedExercises.size}/${exercises.length} exercises done`}
+        </Button>
+      )}
+
+      {/* Delete button — only for workouts never started */}
+      {!workout.completed && completedExercises.size === 0 && (
+        <Button
+          variant="danger"
+          className="w-full"
+          size="sm"
+          onClick={async () => {
+            const supabase = createClient();
+            await supabase
+              .from("workouts")
+              .delete()
+              .eq("id", workout.id);
+            router.push("/dashboard");
+          }}
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete Workout
         </Button>
       )}
 
