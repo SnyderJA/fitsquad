@@ -53,7 +53,7 @@ export default function OnboardingPage() {
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({
         gender,
@@ -64,6 +64,13 @@ export default function OnboardingPage() {
       .eq("id", user.id);
 
     setSaving(false);
+
+    if (error) {
+      console.error("Profile save error:", error);
+      alert(`Failed to save: ${error.message}`);
+      return;
+    }
+
     router.push("/dashboard");
   }
 
