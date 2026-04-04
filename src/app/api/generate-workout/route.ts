@@ -4,14 +4,28 @@ import type { FocusArea } from "@/lib/types";
 // Allow up to 60s for AI generation on Vercel
 export const maxDuration = 60;
 
+// AI Provider config — set AI_PROVIDER=groq or AI_PROVIDER=huggingface
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
 const HF_API_URL = "https://router.huggingface.co/v1/chat/completions";
 const HF_MODEL = "Qwen/Qwen2.5-72B-Instruct";
 
+function getProvider() {
+  const provider = process.env.AI_PROVIDER || "groq";
+  if (provider === "groq" && process.env.GROQ_API_KEY) {
+    return { url: GROQ_API_URL, model: GROQ_MODEL, key: process.env.GROQ_API_KEY, timeout: 15000 };
+  }
+  if (process.env.HF_API_KEY) {
+    return { url: HF_API_URL, model: HF_MODEL, key: process.env.HF_API_KEY, timeout: 55000 };
+  }
+  return null;
+}
+
 export async function POST(request: Request) {
-  const apiKey = process.env.HF_API_KEY;
-  if (!apiKey) {
+  const provider = getProvider();
+  if (!provider) {
     return NextResponse.json(
-      { error: "HF_API_KEY not configured", fallback: true },
+      { error: "No AI provider configured", fallback: true },
       { status: 500 }
     );
   }
@@ -89,16 +103,16 @@ Respond with ONLY this JSON, no other text:
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 55000);
+    const timeout = setTimeout(() => controller.abort(), provider.timeout);
 
-    const response = await fetch(HF_API_URL, {
+    const response = await fetch(provider.url, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${provider.key}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: HF_MODEL,
+        model: provider.model,
         messages: [{ role: "user", content: prompt }],
         max_tokens: 2000,
         temperature: 0.7,
