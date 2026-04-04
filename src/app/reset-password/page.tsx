@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dumbbell, Check } from "lucide-react";
+import Link from "next/link";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -15,23 +16,28 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
+  const [checkDone, setCheckDone] = useState(false);
 
   useEffect(() => {
-    // Supabase automatically picks up the recovery token from the URL hash
-    // when the user clicks the reset link. We need to wait for the session.
     const supabase = createClient();
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
+
+    // Check if we have an active session (set by auth callback)
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
         setSessionReady(true);
+      }
+      setCheckDone(true);
+    });
+
+    // Also listen for auth state changes (handles hash-based recovery tokens)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+        setSessionReady(true);
+        setCheckDone(true);
       }
     });
 
-    // Also check if already in a recovery session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSessionReady(true);
-      }
-    });
+    return () => subscription.unsubscribe();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -83,12 +89,33 @@ export default function ResetPasswordPage() {
     );
   }
 
-  if (!sessionReady) {
+  if (!sessionReady && !checkDone) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
         <div className="mx-auto max-w-sm space-y-6">
           <Dumbbell className="h-8 w-8 animate-pulse text-orange-500 mx-auto" />
           <p className="text-sm text-slate-400">Verifying reset link...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!sessionReady && checkDone) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+        <div className="mx-auto max-w-sm space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-white">Link expired</h1>
+            <p className="text-sm text-slate-400">
+              This password reset link is no longer valid. Please request a new one.
+            </p>
+          </div>
+          <Link
+            href="/forgot-password"
+            className="text-sm text-orange-500 hover:text-orange-400 font-medium"
+          >
+            Request new reset link
+          </Link>
         </div>
       </main>
     );
