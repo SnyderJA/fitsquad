@@ -20,24 +20,49 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     const supabase = createClient();
+    let resolved = false;
 
-    // Check if we have an active session (set by auth callback)
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setSessionReady(true);
-      }
-      setCheckDone(true);
-    });
-
-    // Also listen for auth state changes (handles hash-based recovery tokens)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+    function markReady() {
+      if (!resolved) {
+        resolved = true;
         setSessionReady(true);
         setCheckDone(true);
       }
+    }
+
+    function markFailed() {
+      if (!resolved) {
+        resolved = true;
+        setCheckDone(true);
+      }
+    }
+
+    // Listen for auth state changes — PASSWORD_RECOVERY fires when
+    // Supabase processes the recovery token from the URL hash
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+        markReady();
+      }
     });
 
-    return () => subscription.unsubscribe();
+    // Also check if there's already an active session
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        markReady();
+      }
+    });
+
+    // If nothing fires after 5 seconds, mark as failed
+    const timeout = setTimeout(() => {
+      markFailed();
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -79,7 +104,9 @@ export default function ResetPasswordPage() {
             <Check className="h-8 w-8 text-green-400" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-white">Password updated!</h1>
+            <h1 className="text-2xl font-bold text-white">
+              Password updated!
+            </h1>
             <p className="text-sm text-slate-400">
               Redirecting to your dashboard...
             </p>
@@ -107,7 +134,8 @@ export default function ResetPasswordPage() {
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-white">Link expired</h1>
             <p className="text-sm text-slate-400">
-              This password reset link is no longer valid. Please request a new one.
+              This password reset link is no longer valid. Please request a new
+              one.
             </p>
           </div>
           <Link
