@@ -95,7 +95,7 @@ export default function NewWorkoutPage() {
     } catch (err) {
       // Fallback to local generator
       console.warn("Falling back to local generator:", err);
-      const workout = generateWorkout(focusAreas, duration);
+      const workout = generateWorkout(focusAreas, duration, profileData?.limitations || []);
       exercises = [
         ...workout.warmup.map((e) => ({ ...e, phase: "warmup" })),
         ...workout.exercises.map((e) => ({ ...e, phase: "main" })),

@@ -1,4 +1,5 @@
-import type { FocusArea, Exercise, GeneratedWorkout } from "@/lib/types";
+import type { FocusArea, Exercise, GeneratedWorkout, Limitation } from "@/lib/types";
+import { getBlockedExerciseNames, isExerciseBlocked } from "@/lib/ai/exercise-blocklist";
 
 const EXERCISE_LIBRARY: Exercise[] = [
   // Chest
@@ -78,22 +79,33 @@ function shuffleArray<T>(array: T[]): T[] {
 
 export function generateWorkout(
   focusAreas: FocusArea[],
-  durationMinutes: number = 35
+  durationMinutes: number = 35,
+  limitations: Limitation[] = []
 ): GeneratedWorkout {
   const areas = focusAreas.includes("full_body")
     ? (["chest", "back", "shoulders", "arms", "legs", "glutes", "core"] as FocusArea[])
     : focusAreas;
 
-  // Filter kettlebell exercises matching the focus areas for main workout
+  const blockedNames = getBlockedExerciseNames(limitations);
+
+  // Filter kettlebell exercises matching focus areas AND safe for user's limitations
   const matchingExercises = EXERCISE_LIBRARY.filter(
     (ex) =>
       ex.type === "kettlebell" &&
-      ex.muscleGroups.some((mg) => areas.includes(mg))
+      ex.muscleGroups.some((mg) => areas.includes(mg)) &&
+      !isExerciseBlocked(ex.name, blockedNames)
+  );
+
+  // Filter warmup and cooldown for safety too
+  const safeWarmup = WARMUP.filter(
+    (ex) => !isExerciseBlocked(ex.name, blockedNames)
+  );
+  const safeCooldown = COOLDOWN.filter(
+    (ex) => !isExerciseBlocked(ex.name, blockedNames)
   );
 
   // Shuffle and pick enough exercises to fill the duration
-  // ~3 min per exercise (sets * reps + rest), warmup ~5 min, cooldown ~5 min
-  const mainMinutes = durationMinutes - 10; // subtract warmup/cooldown
+  const mainMinutes = durationMinutes - 10;
   const exerciseCount = Math.max(4, Math.min(8, Math.floor(mainMinutes / 3.5)));
 
   const selected = shuffleArray(matchingExercises)
@@ -104,7 +116,7 @@ export function generateWorkout(
     focusAreas,
     durationMinutes,
     exercises: selected,
-    warmup: WARMUP,
-    cooldown: COOLDOWN,
+    warmup: safeWarmup.length > 0 ? safeWarmup : [WARMUP[0]], // always have at least one
+    cooldown: safeCooldown.length > 0 ? safeCooldown : [COOLDOWN[0]],
   };
 }

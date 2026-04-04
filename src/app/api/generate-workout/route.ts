@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import type { FocusArea } from "@/lib/types";
+import type { FocusArea, Limitation } from "@/lib/types";
+import {
+  getBlockedExerciseNames,
+  isExerciseBlocked,
+} from "@/lib/ai/exercise-blocklist";
 
 // Allow up to 60s for AI generation on Vercel
 export const maxDuration = 60;
@@ -50,12 +54,17 @@ export async function POST(request: Request) {
     lastDifficulty?: string | null;
   };
 
+  // Build limitation blocklist
+  const limitationBlockedNames = getBlockedExerciseNames(
+    (limitations || []) as Limitation[]
+  );
+
   // Build personalization context
   const personalization: string[] = [];
   if (gender) personalization.push(`The user is ${gender}.`);
   if (limitations && limitations.length > 0) {
     personalization.push(
-      `IMPORTANT: The user has physical limitations in their ${limitations.join(", ")}. Avoid exercises that put stress on these areas. Provide safe alternatives instead.`
+      `CRITICAL SAFETY REQUIREMENT: The user has physical limitations in their ${limitations.join(", ")}. You MUST NOT include any of these exercises: ${limitationBlockedNames.join(", ")}. Use safe alternatives that do not stress the ${limitations.join(" or ")}. This is non-negotiable.`
     );
   }
   if (pushupCount != null) {
@@ -161,6 +170,18 @@ Respond with ONLY this JSON, no other text:
       );
     }
 
+    // Post-AI safety validation: filter out any exercises that are unsafe
+    // for the user's limitations (in case the AI ignored the instruction)
+    const filterUnsafe = (exercises: Array<Record<string, unknown>>) =>
+      exercises.filter(
+        (ex) =>
+          !isExerciseBlocked(String(ex.name || ""), limitationBlockedNames)
+      );
+
+    const safeWarmup = filterUnsafe(workout.warmup);
+    const safeExercises = filterUnsafe(workout.exercises);
+    const safeCooldown = filterUnsafe(workout.cooldown);
+
     // Add muscleGroups and phase fields for compatibility
     const tagExercises = (
       exercises: Array<Record<string, unknown>>,
@@ -175,9 +196,9 @@ Respond with ONLY this JSON, no other text:
     return NextResponse.json({
       focusAreas,
       durationMinutes,
-      warmup: tagExercises(workout.warmup, "warmup"),
-      exercises: tagExercises(workout.exercises, "main"),
-      cooldown: tagExercises(workout.cooldown, "cooldown"),
+      warmup: tagExercises(safeWarmup, "warmup"),
+      exercises: tagExercises(safeExercises, "main"),
+      cooldown: tagExercises(safeCooldown, "cooldown"),
     });
   } catch (error) {
     console.error("Workout generation error:", error);
