@@ -1,17 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dumbbell, ArrowLeft, Mail } from "lucide-react";
 import Link from "next/link";
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordForm() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const urlError = searchParams.get("error");
+    if (urlError) {
+      setError(`Reset failed: ${urlError}. Please try again.`);
+    }
+  }, [searchParams]);
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
@@ -20,7 +29,7 @@ export default function ForgotPasswordPage() {
 
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/auth/recovery`,
     });
 
     setLoading(false);
@@ -96,5 +105,19 @@ export default function ForgotPasswordPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center">
+          <Dumbbell className="h-8 w-8 animate-pulse text-orange-500" />
+        </main>
+      }
+    >
+      <ForgotPasswordForm />
+    </Suspense>
   );
 }
