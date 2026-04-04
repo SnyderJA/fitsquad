@@ -20,9 +20,13 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-/* Safe area for PWA */
+/* Safe areas for PWA (Dynamic Island, notch, home indicator) */
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* Hide scrollbar but allow scrolling */
