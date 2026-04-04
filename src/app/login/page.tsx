@@ -57,13 +57,13 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} method="POST" action="#" className="space-y-4" data-1p-fill="true">
           <Input
             id="email"
             name="email"
             label="Email"
             type="email"
-            autoComplete="email"
+            autoComplete="username email"
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -79,6 +79,7 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            data-1p-ignore={false}
           />
           {error && (
             <p className="text-sm text-red-400">{error}</p>
